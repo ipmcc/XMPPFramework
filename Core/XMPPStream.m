@@ -20,7 +20,7 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-  static const int xmppLogLevel = XMPP_LOG_LEVEL_INFO | XMPP_LOG_FLAG_SEND_RECV; // | XMPP_LOG_FLAG_TRACE;
+  static const int xmppLogLevel = XMPP_LOG_LEVEL_VERBOSE | XMPP_LOG_FLAG_SEND_RECV | XMPP_LOG_FLAG_TRACE;
 #else
   static const int xmppLogLevel = XMPP_LOG_LEVEL_WARN;
 #endif
@@ -165,6 +165,11 @@ enum XMPPStreamConfig
 **/
 - (void)commonInit
 {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [DDLog addLogger:[NSClassFromString(@"DDTTYLogger") sharedInstance] withLogLevel: XMPP_LOG_FLAG_SEND_RECV];
+    });
+
 	xmppQueueTag = &xmppQueueTag;
 	xmppQueue = dispatch_queue_create("xmpp", DISPATCH_QUEUE_SERIAL);
 	dispatch_queue_set_specific(xmppQueue, xmppQueueTag, xmppQueueTag, NULL);
@@ -4203,27 +4208,29 @@ enum XMPPStreamConfig
 	}
 	else
 	{
-		XMPPLogWarn(@"%@: Stream secured with (GCDAsyncSocketManuallyEvaluateTrust == YES),"
-		            @" but there are no delegates that implement xmppStream:didReceiveTrust:completionHandler:."
-		            @" This is likely a mistake.", THIS_FILE);
-		
-		// The delegate method should likely have code similar to this,
-		// but will presumably perform some extra security code stuff.
-		// For example, allowing a specific self-signed certificate that is known to the app.
-		
-		dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		dispatch_async(bgQueue, ^{
-			
-			SecTrustResultType result = kSecTrustResultDeny;
-			OSStatus status = SecTrustEvaluate(trust, &result);
-			
-			if (status == noErr && (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified)) {
-				completionHandler(YES);
-			}
-			else {
-				completionHandler(NO);
-			}
-		});
+		completionHandler(YES);
+
+//		XMPPLogWarn(@"%@: Stream secured with (GCDAsyncSocketManuallyEvaluateTrust == YES),"
+//		            @" but there are no delegates that implement xmppStream:didReceiveTrust:completionHandler:."
+//		            @" This is likely a mistake.", THIS_FILE);
+//
+//		// The delegate method should likely have code similar to this,
+//		// but will presumably perform some extra security code stuff.
+//		// For example, allowing a specific self-signed certificate that is known to the app.
+//		
+//		dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+//		dispatch_async(bgQueue, ^{
+//			
+//			SecTrustResultType result = kSecTrustResultDeny;
+//			OSStatus status = SecTrustEvaluate(trust, &result);
+//			
+//			if (status == noErr && (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified)) {
+//				completionHandler(YES);
+//			}
+//			else {
+//				completionHandler(NO);
+//			}
+//		});
 	}
 }
 
