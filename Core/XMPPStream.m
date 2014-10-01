@@ -5,6 +5,7 @@
 #import "XMPPIDTracker.h"
 #import "XMPPSRVResolver.h"
 #import "NSData+XMPP.h"
+#import <CocoaAsyncSocket/CocoaAsyncSocket.h>
 
 #import <objc/runtime.h>
 #import <libkern/OSAtomic.h>
@@ -74,7 +75,7 @@ enum XMPPStreamConfig
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface XMPPStream ()
+@interface XMPPStream () <GCDAsyncSocketDelegate>
 {
 	dispatch_queue_t xmppQueue;
 	void *xmppQueueTag;
